@@ -1,6 +1,13 @@
 // TIC TAC TOE GAME
 import { useEffect, useState } from "react";
-import { TouchableOpacity, View, Text } from "react-native";
+import {
+  TouchableOpacity,
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  Pressable,
+} from "react-native";
 
 type GamePlay = "not-played" | "X" | "O";
 
@@ -70,16 +77,39 @@ const checkWinner = () => {
   ) {
     return GAME_BOARD[0][2];
   }
+
+  // Check for a draw
+  const isDraw = GAME_BOARD.every((row) =>
+    row.every((cell) => cell !== "not-played")
+  );
+  if (isDraw) {
+    return "draw";
+  }
   return null;
+};
+
+const clearBoard = () => {
+  GAME_BOARD.forEach((row, rowIndex) => {
+    row.forEach((_, cellIndex) => {
+      GAME_BOARD[rowIndex][cellIndex] = "not-played";
+    });
+  });
 };
 
 export default function Index() {
   const [isCrossTurn, setIsCrossTurn] = useState(true);
+  const [winner, setWinner] = useState<string | null>(null);
 
   useEffect(() => {
     const winner = checkWinner();
     if (winner) {
-      alert(`Winner is ${winner}`);
+      clearBoard();
+      setIsCrossTurn(true);
+      if (winner === "draw") {
+        setWinner("It's a draw");
+      } else {
+        setWinner(`${winner} wins`);
+      }
     }
   }, [isCrossTurn]);
 
@@ -109,6 +139,52 @@ export default function Index() {
           ))}
         </View>
       ))}
+      <Modal
+        visible={!!winner}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setWinner(null)}
+      >
+        <Pressable
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onPress={() => setWinner(null)}
+        >
+          <View style={styles.modalView}>
+            <Text
+              style={{
+                fontSize: 30,
+                fontWeight: "bold",
+                textAlign: "center",
+                color: "#6699cc",
+              }}
+            >
+              {winner}
+            </Text>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+});
